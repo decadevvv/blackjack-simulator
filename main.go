@@ -28,12 +28,14 @@ var SupportStrategyNames []string
 func main() {
 	strategyName := flag.String("s", "basic", fmt.Sprintf("what strategy to use (support %v)", SupportStrategyNames))
 	round := flag.Uint64("r", 10000, "number of round to simulate")
+	shoeSize := flag.Uint("d", 2, "shoe size: number of decks to use in the shoe")
+	shoePenetration := flag.Float64("p", 0.5, "shoe penetration: when the percentage of remaining cards in the shoe falls below this ratio, shoe will reshuffle")
 	flag.Parse()
 
 	game := NewGame(GameSetting{
 		Rules: Rules{
-			ShoeSize:                  2,
-			ShoePenetrationThreshold:  0.5,
+			ShoeSize:                  *shoeSize,
+			ShoePenetrationThreshold:  *shoePenetration,
 			AllowTriple7BlackJack:     false,
 			AllowAceAceSplitAndDouble: true,
 		},

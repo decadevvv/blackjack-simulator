@@ -7,7 +7,7 @@ This is a Golang project designed to test BlackJack strategies.
 1. never-explode: never split and double, only hit on hard point < 12
 2. dealer: mimic dealer, always hit on point < 17
 3. basic: the basic strategy introduced in the book `Beat the Dealer: A Winning Strategy for the Game of Twenty-One` by `Edward Thorp`.
-4. ask-user: you can also play with the simulator, here is an example
+4. ask-user: you can also play with the simulator by answering `Y` or `N` in command line
 
 How to build:
 
@@ -51,7 +51,26 @@ Split analysis: 0 hands could split (0.00%), 0 splits (NaN%), 0 win, 0 push, 0 l
 player edge = 25.000%
 ```
 
+Example of playing the simulator:
+
+```shell
+$ .\blackjack-simulator.exe -r 10 -s ask-user
+[K 8] (18) V.S. [10 ?], wanna double? N
+[K 8] (18) V.S. [10 ?], wanna hit? N
+round 1 push: [K 8] (18) V.S. [10 8] (18) (player balance 0.0 unchanged)
+[K K] V.S. [3 ?], wanna split? Y
+[K A] (21) V.S. [3 ?], wanna double? N
+[K A] (21) V.S. [3 ?], wanna hit? N
+[K J] (20) V.S. [3 ?], wanna double? N
+[K J] (20) V.S. [3 ?], wanna hit? N
+round 2 win push: [K A] (21) [K J] (20) V.S. [3 7 Q] (20) (player balance 0.0 + 1.0 => 2.0)
+[K 9] (19) V.S. [Q ?], wanna double? N
+[K 9] (19) V.S. [Q ?], wanna hit? N
+round 3 win: [K 9] (19) V.S. [Q 8] (18) (player balance 2.0 + 1.0 => 3.0)
+```
+
 How to add new strategies:
 
 1. Implement the `Strategy` interface defined in this repo.
-2. Then run the `main.go` file to see the result.
+2. Update the `StrategyMap` defined in the `main.go`
+3. Then run this program to see the result (set `-s` flag to the name of your strategy).
