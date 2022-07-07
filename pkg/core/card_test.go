@@ -1,6 +1,6 @@
 // Copyright 2022 decadevvv
 
-package main
+package card
 
 import (
 	"fmt"

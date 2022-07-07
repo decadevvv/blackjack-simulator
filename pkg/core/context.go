@@ -1,14 +1,17 @@
 // Copyright 2022 decadevvv
 
-package main
+package game
 
-import "context"
+import (
+	"context"
+	"github.com/decadevvv/blackjack-simulator/pkg/card"
+)
 
 type Context struct {
 	context.Context
 	CurrentRound   uint64
-	DealerOpenCard Card
-	Shoe           *Shoe
+	DealerOpenCard card.Card
+	Shoe           *card.Shoe
 	GameSetting
 }
 

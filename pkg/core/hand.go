@@ -1,13 +1,14 @@
 // Copyright 2022 decadevvv
 
-package main
+package card
 
 import (
 	"fmt"
+	"github.com/decadevvv/blackjack-simulator/pkg/core"
 )
 
 type Hand struct {
-	rules    Rules
+	rules    core.Rules
 	cards    Cards
 	split    bool
 	doubled  bool
@@ -16,7 +17,7 @@ type Hand struct {
 	points   uint8
 }
 
-func NewHand(split bool, rules Rules) *Hand {
+func NewHand(split bool, rules core.Rules) *Hand {
 	return &Hand{
 		rules:   rules,
 		cards:   []Card{},

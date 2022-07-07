@@ -1,16 +1,21 @@
 // Copyright 2022 decadevvv
 
-package main
+package player
+
+import (
+	"github.com/decadevvv/blackjack-simulator/pkg/core"
+	"github.com/decadevvv/blackjack-simulator/pkg/strategy"
+)
 
 type Player struct {
-	hand        *Hand
-	splitHand   *Hand
-	strategy    Strategy
+	hand        *core.Hand
+	splitHand   *core.Hand
+	strategy    strategy.Strategy
 	splitPlayed bool
 	balance     float64
 }
 
-func NewPlayer(strategy Strategy) *Player {
+func NewPlayer(strategy strategy.Strategy) *Player {
 	return &Player{
 		hand:        nil,
 		splitHand:   nil,
@@ -28,29 +33,29 @@ func (p *Player) Balance() float64 {
 	return p.balance
 }
 
-func (p *Player) Hand() *Hand {
+func (p *Player) Hand() *core.Hand {
 	return p.hand
 }
 
-func (p *Player) SplitHand() *Hand {
+func (p *Player) SplitHand() *core.Hand {
 	return p.splitHand
 }
 
-func (p *Player) InitRound(ctx *Context) {
-	p.hand = NewHand(false, ctx.Rules)
+func (p *Player) InitRound(ctx *core.Context) {
+	p.hand = core.NewHand(false, ctx.Rules)
 	p.splitHand = nil
 	p.hand.Add(ctx.Shoe.Deal())
 	p.hand.Add(ctx.Shoe.Deal())
 	p.splitPlayed = false
 }
 
-func (p *Player) PlayRound(ctx *Context) {
+func (p *Player) PlayRound(ctx *core.Context) {
 	defer func() {
 		if p.splitHand != nil && !p.splitPlayed {
 			p.PlayRound(ctx)
 		}
 	}()
-	var hand *Hand
+	var hand *core.Hand
 	if p.splitHand != nil {
 		hand = p.splitHand
 		defer func() {

@@ -1,16 +1,19 @@
 // Copyright 2022 decadevvv
 
-package main
+package game
 
 import (
 	"context"
 	"fmt"
+	"github.com/decadevvv/blackjack-simulator/pkg/card"
+	"github.com/decadevvv/blackjack-simulator/pkg/core"
+	"github.com/decadevvv/blackjack-simulator/pkg/strategy"
 )
 
 type Game struct {
-	ctx        *Context
+	ctx        *core.Context
 	dealer     *Dealer
-	player     *Player
+	Player     *Player
 	statistics Statistics
 }
 
@@ -89,14 +92,14 @@ func (s Statistics) String() string {
 	return msg
 }
 
-func NewGame(setting GameSetting) *Game {
+func NewGame(setting core.GameSetting) *Game {
 	return &Game{
-		ctx: &Context{
+		ctx: &core.Context{
 			Context:     context.Background(),
 			GameSetting: setting,
 		},
 		dealer:     NewDealer(),
-		player:     nil,
+		Player:     nil,
 		statistics: Statistics{},
 	}
 }
@@ -105,12 +108,12 @@ func (g *Game) Statistics() Statistics {
 	return g.statistics
 }
 
-func (g *Game) AddPlayerWithStrategy(s Strategy) {
-	g.player = NewPlayer(s)
+func (g *Game) AddPlayerWithStrategy(s strategy.Strategy) {
+	g.Player = NewPlayer(s)
 }
 
 func (g *Game) PlayRounds(round uint64) {
-	g.ctx.Shoe = NewShoe(g.ctx.Rules.ShoeSize, g.ctx.Rules.ShoePenetrationThreshold)
+	g.ctx.Shoe = card.NewShoe(g.ctx.Rules.ShoeSize, g.ctx.Rules.ShoePenetrationThreshold)
 	g.ctx.Shoe.Reshuffle()
 	for i := uint64(1); i <= round; i++ {
 		g.ctx.CurrentRound = i
@@ -124,22 +127,22 @@ func (g *Game) Play() {
 	}
 
 	g.dealer.InitRound(g.ctx)
-	g.player.InitRound(g.ctx)
+	g.Player.InitRound(g.ctx)
 
-	g.player.PlayRound(g.ctx)
+	g.Player.PlayRound(g.ctx)
 	g.dealer.PlayRound(g.ctx)
 
-	playerHand := g.player.Hand()
-	playerSplitHand := g.player.SplitHand()
+	playerHand := g.Player.Hand()
+	playerSplitHand := g.Player.SplitHand()
 	dealerHand := g.dealer.Hand()
 
 	var msg string
 	var delta float64
-	beforeBalance := g.player.Balance()
+	beforeBalance := g.Player.Balance()
 	if playerSplitHand == nil {
 		roundResult := g.HandResult(playerHand)
 		delta = HandRatio[roundResult]
-		g.player.BalanceChange(delta)
+		g.Player.BalanceChange(delta)
 		g.UpdateStatistics(playerHand, roundResult)
 		msg = fmt.Sprintf("round %d %s: %v V.S. %v", g.ctx.CurrentRound, roundResult, playerHand, dealerHand)
 	} else {
@@ -149,7 +152,7 @@ func (g *Game) Play() {
 		splitHandResult := g.HandResult(playerSplitHand)
 		delta += HandRatio[handResult]
 		g.UpdateStatistics(playerSplitHand, splitHandResult)
-		g.player.BalanceChange(delta)
+		g.Player.BalanceChange(delta)
 		delta = HandRatio[handResult] + HandRatio[splitHandResult]
 		msg = fmt.Sprintf("round %d %s %s: %v %v V.S. %v", g.ctx.CurrentRound, handResult, splitHandResult, playerHand, playerSplitHand, dealerHand)
 	}
@@ -158,11 +161,11 @@ func (g *Game) Play() {
 	}
 	if g.ctx.PrintBalanceAfterRound {
 		if delta > 0 {
-			msg = fmt.Sprintf("%s (player balance %.1f + %.1f => %.1f)", msg, beforeBalance, delta, g.player.Balance())
+			msg = fmt.Sprintf("%s (player balance %.1f + %.1f => %.1f)", msg, beforeBalance, delta, g.Player.Balance())
 		} else if delta == 0 {
 			msg = fmt.Sprintf("%s (player balance %.1f unchanged)", msg, beforeBalance)
 		} else {
-			msg = fmt.Sprintf("%s (player balance %.1f - %.1f => %.1f)", msg, beforeBalance, -delta, g.player.Balance())
+			msg = fmt.Sprintf("%s (player balance %.1f - %.1f => %.1f)", msg, beforeBalance, -delta, g.Player.Balance())
 		}
 
 	}
@@ -171,7 +174,7 @@ func (g *Game) Play() {
 	g.ctx.Shoe.StageToGarbage()
 }
 
-func (g *Game) UpdateStatistics(hand *Hand, handResult HandResult) {
+func (g *Game) UpdateStatistics(hand *card.Hand, handResult HandResult) {
 	g.statistics.Hands++
 	switch handResult {
 	case HandBlackJack:
@@ -229,7 +232,7 @@ func (g *Game) UpdateStatistics(hand *Hand, handResult HandResult) {
 	}
 }
 
-func (g *Game) HandResult(hand *Hand) (res HandResult) {
+func (g *Game) HandResult(hand *card.Hand) (res HandResult) {
 	defer func() {
 		if hand.Doubled() {
 			switch res {

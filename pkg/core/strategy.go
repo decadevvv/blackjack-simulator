@@ -1,6 +1,9 @@
-package main
+package strategy
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/decadevvv/blackjack-simulator/pkg/core"
+)
 
 var StrategyBasic = NewStrategy(SplitStrategyBasic, DoubleStrategyBasic, HitStrategyBasic)
 var StrategyBasicOnlyHit = NewStrategy(SplitStrategyNeverSplit, DoubleStrategyNeverDouble, HitStrategyBasic)
@@ -8,86 +11,32 @@ var StrategyNeverExplode = NewStrategy(SplitStrategyNeverSplit, DoubleStrategyNe
 var StrategyDealer = NewStrategy(SplitStrategyNeverSplit, DoubleStrategyNeverDouble, HitStrategyDealer)
 var StrategyAskUser = NewStrategy(SplitStrategyAskUser, DoubleStrategyAskUser, HitStrategyAskUser)
 
-type Strategy interface {
-	Split(ctx *Context, card Card) bool
-	Double(ctx *Context, card1 Card, card2 Card) bool
-	Hit(ctx *Context, hand *Hand) bool
-}
-
-type SplitStrategy func(ctx *Context, card Card) bool
-type DoubleStrategy func(ctx *Context, card1 Card, card2 Card) bool
-type HitStrategy func(ctx *Context, hand *Hand) bool
-
-type strategy struct {
-	split  SplitStrategy
-	double DoubleStrategy
-	hit    HitStrategy
-}
-
-func NewStrategy(split SplitStrategy, double DoubleStrategy, hit HitStrategy) Strategy {
-	return &strategy{
-		split:  split,
-		double: double,
-		hit:    hit,
-	}
-}
-
-func (s *strategy) Split(ctx *Context, card Card) bool {
-	return s.split(ctx, card)
-}
-
-func (s *strategy) Double(ctx *Context, card1 Card, card2 Card) bool {
-	return s.double(ctx, card1, card2)
-}
-
-func (s *strategy) Hit(ctx *Context, hand *Hand) bool {
-	return s.hit(ctx, hand)
-}
-
-var SplitStrategyNeverSplit SplitStrategy = func(ctx *Context, card Card) bool {
-	return false
-}
-
-var DoubleStrategyNeverDouble DoubleStrategy = func(ctx *Context, card1 Card, card2 Card) bool {
-	return false
-}
-
 var HitStrategyNeverExplode = HitStrategySoftHardLimit(17, 12)
 
 var HitStrategyDealer = HitStrategySoftHardLimit(17, 17)
 
-func HitStrategySoftHardLimit(softLimit uint8, hardLimit uint8) HitStrategy {
-	return func(ctx *Context, hand *Hand) bool {
-		if hand.Soft() {
-			return hand.Points() < softLimit
-		} else {
-			return hand.Points() < hardLimit
-		}
-	}
-}
-
-var SplitStrategyBasic SplitStrategy = func(ctx *Context, card Card) bool {
+var SplitStrategyBasic SplitStrategy = func(ctx *core.Context, card core.Card) bool {
 	return BasicSplitStrategyTable[card][ctx.DealerOpenCard]
 }
 
-var DoubleStrategyBasic DoubleStrategy = func(ctx *Context, card1 Card, card2 Card) bool {
+var DoubleStrategyBasic DoubleStrategy = func(ctx *core.Context, card1 core.Card, card2 core.Card) bool {
 	//if card1 == CardA && card2 == CardA {
 	//	return true
 	//}
-	if card1 == CardA {
+	if card1 == core.CardA {
 		return BasicSoftDoubleStrategyTable[card2][ctx.DealerOpenCard]
 	}
-	if card2 == CardA {
+	if card2 == core.CardA {
 		return BasicSoftDoubleStrategyTable[card1][ctx.DealerOpenCard]
 	}
-	hardPoint := CardPoint[card1] + CardPoint[card2]
-	if hardPoint == 8 && (ctx.DealerOpenCard == Card5 || ctx.DealerOpenCard == Card6) {
-		return !(card1 == Card6 || card2 == Card6)
+	hardPoint := core.CardPoint[card1] + core.CardPoint[card2]
+	if hardPoint == 8 && (ctx.DealerOpenCard == core.Card5 || ctx.DealerOpenCard == core.Card6) {
+		return !(card1 == core.Card6 || card2 == core.Card6)
 	}
 	return BasicHardDoubleStrategyTable[hardPoint][ctx.DealerOpenCard]
 }
 
-var HitStrategyBasic HitStrategy = func(ctx *Context, hand *Hand) bool {
+var HitStrategyBasic HitStrategy = func(ctx *core.Context, hand *core.Hand) bool {
 	if hand.Soft() {
 		return BasicSoftHitStrategyTable[hand.Points()][ctx.DealerOpenCard]
 	} else {
@@ -227,15 +176,15 @@ var BasicHardHitStrategyTable = [22][14]bool{
 	/* 21 */ {X, F, F, F, F, F, F, F, F, F, F, F, F, F}, // never hit on hard point > 16
 }
 
-var SplitStrategyAskUser SplitStrategy = func(ctx *Context, card Card) bool {
+var SplitStrategyAskUser SplitStrategy = func(ctx *core.Context, card core.Card) bool {
 	return AskUser(fmt.Sprintf("[%s %s] V.S. [%s ?], wanna split? ", card.String(), card.String(), ctx.DealerOpenCard.String()))
 }
 
-var DoubleStrategyAskUser DoubleStrategy = func(ctx *Context, card1 Card, card2 Card) bool {
+var DoubleStrategyAskUser DoubleStrategy = func(ctx *core.Context, card1 core.Card, card2 core.Card) bool {
 	return AskUser(fmt.Sprintf("[%s %s] (%d) V.S. [%s ?], wanna double? ", card1.String(), card2.String(), card1.Point()+card2.Point(), ctx.DealerOpenCard.String()))
 }
 
-var HitStrategyAskUser HitStrategy = func(ctx *Context, hand *Hand) bool {
+var HitStrategyAskUser HitStrategy = func(ctx *core.Context, hand *core.Hand) bool {
 	return AskUser(fmt.Sprintf("%v V.S. [%s ?], wanna hit? ", hand, ctx.DealerOpenCard.String()))
 }
 
